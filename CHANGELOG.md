@@ -2,6 +2,11 @@
 
 All notable changes to `Firestore PHP` will be documented in this file.
 
+## 3.2.0 - 2026-11-04
+ - Security: Bump dev dependency `phpunit/phpunit` from `9.6` to `^9.6.33` to resolve a Dependabot advisory (affects `>= 9.0.0 < 9.6.33`). PHPUnit is a dev-only dependency and is not installed in projects that require this package.
+ - Feature: Add `addNestedDocuments()` method, which converts nested arrays in the payload to `FirestoreObject` maps before inserting. Thanks to PR #3 by @Adams-Ijachi
+ - Docs: Fix the `setDocument` and `deleteDocument` examples to match their actual signatures, document `addNestedDocuments`, and fix the `composer.json` install snippet.
+
 ## 3.1.0 - 2023-05-22
  - Feature: Add ability to use special characters in filenames. Thanks to PR #2 by @backendrulz 
 

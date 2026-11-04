@@ -25,23 +25,23 @@ composer require bensontrent/firestore-php
 
 or install it by adding it to `composer.json` then run `composer update`
 
-```javascript
+```json
 "require": {
-    "bensontrent/firestore-php": "^3.0",
+    "bensontrent/firestore-php": "^3.2"
 }
 ```
 
 ## Dependencies
 
  - PHP 7.3 and above (PHP 8+ supported)
+ - [`guzzlehttp/guzzle`](https://packagist.org/packages/guzzlehttp/guzzle) 4.x – 7.x
 
-The bindings require the following extensions in order to work properly:
+The bindings require the following PHP extensions in order to work properly:
 
 - [`curl`](https://secure.php.net/manual/en/book.curl.php)
 - [`json`](https://secure.php.net/manual/en/book.json.php)
-- [`guzzlehttp/guzzle`](https://packagist.org/packages/guzzlehttp/guzzle)
 
-If you use Composer, these dependencies should be handled automatically. If you install manually, you'll want to make sure that these extensions are available.
+If you use Composer, Guzzle is installed automatically. Make sure the `curl` and `json` extensions are enabled in your PHP installation.
 
 ## Usage
 
@@ -161,7 +161,13 @@ $document->fillValues([
 ]);
 ```
 
-You could use `addNestedDocuments` if you have multiple nested objects 
+#### Adding a document with nested arrays
+
+*Available since 3.2.0.*
+
+If your data has several levels of nested arrays, use `addNestedDocuments`. It converts every nested PHP array into a `FirestoreObject` (a Firestore map) and then calls `addDocument`. It takes the same arguments as `addDocument`, including an optional custom document ID as the third argument.
+
+**NOTE:** Every nested array becomes a map, including plain lists such as `['a', 'b']`. If you need a Firestore array field, use `addDocument` with `FirestoreArray` instead.
 
 
 ```php
@@ -206,7 +212,7 @@ $originalData = [
 
 $firestoreClient->addNestedDocuments($collection, $originalData);
 ```
-This just formats the array before using the `addDocument` function
+The call above is equivalent to building the `FirestoreObject` wrappers yourself and passing the result to `addDocument`:
 
 ```php
 
@@ -248,6 +254,8 @@ $originalData = [
         ])
     ])
 ];
+
+$firestoreClient->addDocument($collection, $originalData);
 ```
 
 #### Inserting/Updating a document
@@ -259,7 +267,7 @@ Following will merge document (if exist) else insert the data.
 ```php
 use MrShan0\PHPFirestore\Attributes\FirestoreDeleteAttribute;
 
-$firestoreClient->updateDocument($documentRoot, [
+$firestoreClient->updateDocument($documentPath, [
     'newFieldToAdd' => 'Jane Doe',
     'existingFieldToRemove' => new FirestoreDeleteAttribute
 ]);
@@ -285,24 +293,24 @@ format for documentPath:
 ```
 
 
-- Overwirte or Insert document
+- Overwrite or Insert document
+
+`setDocument` replaces the whole document with the payload; fields that aren't in the payload are removed. As with `updateDocument`, pass `true` as the third argument to require that the document already exists, or `false` to require that it doesn't.
 
 ```php
-use MrShan0\PHPFirestore\Attributes\FirestoreDeleteAttribute;
-
-$firestoreClient->setDocument($collection, $documentId, [
-    'newFieldToAdd' => 'Jane Doe',
-    'existingFieldToRemove' => new FirestoreDeleteAttribute
-], [
-    'exists' => true, // Indicate document must exist
-]);
+$firestoreClient->setDocument($documentPath, [
+    'firstName' => 'Jane',
+    'lastName' => 'Doe',
+], true); // Indicate document must exist
 ```
 
 #### Deleting a document
 
+Pass the full document path, or a `FirestoreDocument` returned by another call:
+
 ```php
-$collection = 'collection/document/innerCollection';
-$firestoreClient->deleteDocument($collection, $documentId);
+$documentPath = 'collection/document/innerCollection/documentId';
+$firestoreClient->deleteDocument($documentPath);
 ```
 
 #### List documents with pagination (or custom parameters)
@@ -368,6 +376,7 @@ $authToken = $firestoreClient->authenticator()->getAuthToken();
 ### Testing
 
 ``` bash
+composer install
 composer test
 ```
 
